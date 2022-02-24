@@ -11,32 +11,30 @@ import java.security.NoSuchAlgorithmException;
 
 public class Walk {
     private static final String HASH_ALGORITHM = "SHA-1";
-    // :NOTE: NULL_HASH, 40 zeros
-    private static final String NULL_HASH = "0000000000000000000000000000000000000000";
+    private static final String EXCEPTION_HASH = "0".repeat(40);
     private static final int BUFFER_SIZE = 1 << 16; // 65536
 
-    private static String getSha(String pathStr) throws NoSuchAlgorithmException {
+    private static String getSha(String pathStr, MessageDigest digest) throws NoSuchAlgorithmException {
         Path path;
         try {
             path = Path.of(pathStr);
         } catch (InvalidPathException e) {
-            System.out.println("Invalid path of file: " + e.getMessage());
-            return NULL_HASH;
+            System.err.println("Invalid path of file: " + e.getMessage());
+            return EXCEPTION_HASH;
         }
 
         byte[] bytes;
         try (InputStream inputStream = Files.newInputStream(path)) {
-            // :NOTE: move sha1 instance
-            MessageDigest sha1 = MessageDigest.getInstance(HASH_ALGORITHM);
             byte[] buffer = new byte[BUFFER_SIZE];
+            digest.reset();
             int n;
             while ((n = inputStream.read(buffer)) != -1) {
-                sha1.update(buffer, 0, n);
+                digest.update(buffer, 0, n);
             }
-            bytes = sha1.digest();
+            bytes = digest.digest();
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-            return NULL_HASH;
+            System.err.println("Reading exception during hashing a file: " + e.getMessage());
+            return EXCEPTION_HASH;
         }
 
         StringBuilder sb = new StringBuilder();
@@ -54,7 +52,7 @@ public class Walk {
             inputPath = Path.of(input);
             outputPath = Path.of(output);
         } catch (InvalidPathException e) {
-            System.out.println("Invalid path of file: " + e.getMessage());
+            System.err.println("Invalid path of file: " + e.getMessage());
             return;
         }
 
@@ -62,8 +60,7 @@ public class Walk {
             try {
                 Files.createDirectories(outputPath.getParent());
             } catch (IOException e) {
-                // :NOTE: err, denied
-                System.out.println("Folder creation for output denied: " + e.getMessage());
+                System.err.println("Cannot create folder for output file: " + e.getMessage());
                 return;
             }
         }
@@ -71,28 +68,25 @@ public class Walk {
         try (BufferedReader br = Files.newBufferedReader(inputPath);
              BufferedWriter bw = Files.newBufferedWriter(outputPath)) {
             String curFile;
+            MessageDigest sha1 = MessageDigest.getInstance(HASH_ALGORITHM);
             while ((curFile = br.readLine()) != null) {
-                // :NOTE: \n
-                bw.write(String.format("%s %s\n", getSha(curFile), curFile));
+                bw.write(String.format("%s %s", getSha(curFile, sha1), curFile));
+                bw.newLine();
             }
         } catch (FileNotFoundException e) {
-            System.out.println("File not found: " + e.getMessage());
-            // :NOTE: SecurityException
-        } catch (SecurityException e) {
-            System.out.println("Security exception: " + e.getMessage());
+            System.err.println("File not found: " + e.getMessage());
         } catch (NoSuchAlgorithmException e) {
-            System.out.println("No such encryption algorithm: " + e.getMessage());
+            System.err.println("No such encryption algorithm: " + e.getMessage());
         } catch (AccessDeniedException e) {
-            System.out.println("Access denied: " + e.getMessage());
+            System.err.println("Access denied: " + e.getMessage());
         } catch (IOException e) {
-            System.out.println("Reading/writing exception: " + e.getMessage());
+            System.err.println("Reading/writing exception: " + e.getMessage());
         }
     }
 
     public static void main(String[] args) {
         if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
-            // :NOTE: Usage: <> <>
-            System.out.println("Problem with arguments");
+            System.out.println("Expected 2 arguments: \"input_file\" \"output_file\"");
             return;
         }
 
