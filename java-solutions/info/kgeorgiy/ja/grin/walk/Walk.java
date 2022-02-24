@@ -11,8 +11,9 @@ import java.security.NoSuchAlgorithmException;
 
 public class Walk {
     private static final String HASH_ALGORITHM = "SHA-1";
+    // :NOTE: NULL_HASH, 40 zeros
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
-    private static final int BUFFER_SIZE = 1 << 16;
+    private static final int BUFFER_SIZE = 1 << 16; // 65536
 
     private static String getSha(String pathStr) throws NoSuchAlgorithmException {
         Path path;
@@ -25,6 +26,7 @@ public class Walk {
 
         byte[] bytes;
         try (InputStream inputStream = Files.newInputStream(path)) {
+            // :NOTE: move sha1 instance
             MessageDigest sha1 = MessageDigest.getInstance(HASH_ALGORITHM);
             byte[] buffer = new byte[BUFFER_SIZE];
             int n;
@@ -60,6 +62,7 @@ public class Walk {
             try {
                 Files.createDirectories(outputPath.getParent());
             } catch (IOException e) {
+                // :NOTE: err, denied
                 System.out.println("Folder creation for output denied: " + e.getMessage());
                 return;
             }
@@ -69,10 +72,12 @@ public class Walk {
              BufferedWriter bw = Files.newBufferedWriter(outputPath)) {
             String curFile;
             while ((curFile = br.readLine()) != null) {
+                // :NOTE: \n
                 bw.write(String.format("%s %s\n", getSha(curFile), curFile));
             }
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + e.getMessage());
+            // :NOTE: SecurityException
         } catch (SecurityException e) {
             System.out.println("Security exception: " + e.getMessage());
         } catch (NoSuchAlgorithmException e) {
@@ -86,6 +91,7 @@ public class Walk {
 
     public static void main(String[] args) {
         if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
+            // :NOTE: Usage: <> <>
             System.out.println("Problem with arguments");
             return;
         }
