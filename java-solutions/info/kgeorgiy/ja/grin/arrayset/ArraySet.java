@@ -25,6 +25,7 @@ public class ArraySet<T> extends AbstractSet<T> implements SortedSet<T> {
     public ArraySet(Collection<? extends T> inputData, Comparator<? super T> comparator) {
         TreeSet<T> tmp = new TreeSet<>(comparator);
         tmp.addAll(inputData);
+        // :NOTE:         this.data = List.copyOf(tmp);
         this.data = new ArrayList<>(tmp);
         this.comparator = comparator;
     }
@@ -50,6 +51,7 @@ public class ArraySet<T> extends AbstractSet<T> implements SortedSet<T> {
 
     @Override
     public SortedSet<T> subSet(T fromElement, T toElement) {
+        // :NOTE: не кидать исключение на isEmpty
         if (isEmpty() || compare(fromElement, toElement) > 0) {
             throw new IllegalArgumentException("fromElement > toElement");
         }
