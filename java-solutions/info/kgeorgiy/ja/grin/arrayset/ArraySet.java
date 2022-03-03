@@ -4,6 +4,8 @@ import java.util.*;
 
 public class ArraySet<T> extends AbstractSet<T> implements SortedSet<T> {
 
+    private final String UNSUPPORTED_OPERATION_MESSAGE = "Unsupported operation for immutable set";
+    private final String NO_SUCH_ELEMENT_MESSAGE = "This set is empty";
     private final List<T> data;
     private final Comparator<? super T> comparator;
 
@@ -73,7 +75,7 @@ public class ArraySet<T> extends AbstractSet<T> implements SortedSet<T> {
     @Override
     public T first() {
         if (isEmpty()) {
-            throw new NoSuchElementException();
+            throw new NoSuchElementException(NO_SUCH_ELEMENT_MESSAGE);
         }
         return data.get(0);
     }
@@ -81,7 +83,7 @@ public class ArraySet<T> extends AbstractSet<T> implements SortedSet<T> {
     @Override
     public T last() {
         if (isEmpty()) {
-            throw new NoSuchElementException();
+            throw new NoSuchElementException(NO_SUCH_ELEMENT_MESSAGE);
         }
         return data.get(size() - 1);
     }
@@ -102,8 +104,15 @@ public class ArraySet<T> extends AbstractSet<T> implements SortedSet<T> {
         return (i < 0 ? -(i + 1) : i);
     }
 
+    @Override
+    public boolean add(Object o) {
+        throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MESSAGE);
+    }
 
-
+    @Override
+    public boolean remove(Object o) {
+        throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MESSAGE);
+    }
 
     public static void main(String[] args) {
         SortedSet<Integer> set = new ArraySet<>(List.of(1, 2, 4, 7));
